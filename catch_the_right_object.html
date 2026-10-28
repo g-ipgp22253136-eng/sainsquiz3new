@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>科学接接乐 - Catch the Right Object</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=ZCOOL+KuaiLe&display=swap');
+
+        body {
+            font-family: 'Fredoka', 'ZCOOL KuaiLe', sans-serif;
+            background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 50%, #ffd1dc 100%);
+            touch-action: none;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .pink-glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 182, 193, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(255, 105, 180, 0.15);
+        }
+
+        .pink-btn {
+            background: linear-gradient(180deg, #ff9ebb 0%, #ff6b95 100%);
+            box-shadow: 0 6px 0 #d84370, 0 10px 15px rgba(255, 105, 180, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .pink-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #d84370, 0 4px 6px rgba(255, 105, 180, 0.3);
+        }
+
+        .purple-btn {
+            background: linear-gradient(180deg, #c084fc 0%, #9333ea 100%);
+            box-shadow: 0 6px 0 #6b21a8, 0 10px 15px rgba(147, 51, 234, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .purple-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #6b21a8, 0 4px 6px rgba(147, 51, 234, 0.3);
+        }
+
+        .game-card {
+            box-shadow: 0 10px 25px -5px rgba(255, 182, 193, 0.4);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-pink {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-pulse-pink {
+            animation: pulse-pink 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between items-center relative overflow-hidden">
+
+    <!-- Light Pink Glow Background Shapes -->
+    <div class="absolute -top-20 -left-20 w-80 h-80 bg-pink-200 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+    <div class="absolute -bottom-20 -right-20 w-96 h-96 bg-rose-200 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+
+    <!-- START MENU -->
+    <div id="start-screen" class="absolute inset-0 flex flex-col items-center justify-center p-4 z-50">
+        <div class="pink-glass rounded-3xl p-8 max-w-lg w-full text-center flex flex-col items-center border-4 border-white animate-float">
+            <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mb-3 shadow-inner border-2 border-pink-300">
+                <i class="fa-solid fa-basket-shopping text-4xl text-pink-500"></i>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-pink-600 mb-2 drop-shadow-sm tracking-wide">
+                科学接接乐
+            </h1>
+            <p class="text-pink-400 font-semibold mb-6 text-sm md:text-base">Catch the Right Object!</p>
+
+            <div class="bg-white/80 rounded-2xl p-4 mb-6 w-full text-left text-pink-700 text-sm space-y-2 border border-pink-100">
+                <div class="flex items-center gap-2 font-bold text-pink-600 border-b border-pink-100 pb-2">
+                    <i class="fa-solid fa-flask text-pink-500"></i> 5 大科学精选单元 (共 10 题)：
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs md:text-sm pt-1">
+                    <span class="bg-pink-50 p-1.5 rounded-lg border border-pink-100"><i class="fa-solid fa-leaf text-green-400 mr-1"></i> 植物 (Plants)</span>
+                    <span class="bg-pink-50 p-1.5 rounded-lg border border-pink-100"><i class="fa-solid fa-magnet text-red-400 mr-1"></i> 磁铁 (Magnets)</span>
+                    <span class="bg-pink-50 p-1.5 rounded-lg border border-pink-100"><i class="fa-solid fa-droplet text-blue-400 mr-1"></i> 吸水能力 (Water)</span>
+                    <span class="bg-pink-50 p-1.5 rounded-lg border border-pink-100"><i class="fa-solid fa-mountain-sun text-amber-400 mr-1"></i> 陆地与水域</span>
+                    <span class="bg-pink-50 p-1.5 rounded-lg border border-pink-100 col-span-2 text-center"><i class="fa-solid fa-cubes text-purple-400 mr-1"></i> 建筑套件 (Building Kits)</span>
+                </div>
+            </div>
+
+            <div class="w-full space-y-3">
+                <button id="start-btn" class="pink-btn w-full py-4 rounded-2xl text-white font-extrabold text-xl tracking-wider uppercase transition-transform active:scale-95">
+                    <i class="fa-solid fa-play mr-2"></i> 开始科学挑战！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME CONTAINER -->
+    <div id="game-ui" class="hidden w-full h-full flex flex-col justify-between relative z-10">
+        <!-- TOP HUD -->
+        <div class="p-4 w-full max-w-4xl mx-auto">
+            <div class="pink-glass rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2 border-2 border-white">
+                <!-- Level / Score / Combo -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-pink-100 px-3 py-1.5 rounded-xl border border-pink-300 flex items-center gap-2">
+                        <span class="text-xs text-pink-500 font-bold">进度</span>
+                        <span id="level-display" class="font-bold text-pink-700 text-base">1/10</span>
+                    </div>
+                    <div class="bg-pink-100 px-3 py-1.5 rounded-xl border border-pink-300 flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400 text-sm"></i>
+                        <span id="score-display" class="font-extrabold text-pink-700 text-lg">0</span>
+                    </div>
+                </div>
+
+                <!-- Infinite Play Badge (Replaced Life Hearts) -->
+                <div class="bg-pink-100 px-3 py-1.5 rounded-xl border border-pink-300 flex items-center gap-1.5 text-pink-500 font-bold text-xs">
+                    <i class="fa-solid fa-infinity text-pink-500 text-sm animate-pulse"></i>
+                    <span>轻松探索模式</span>
+                </div>
+
+                <!-- Combo Badge -->
+                <div id="combo-badge" class="hidden bg-gradient-to-r from-amber-400 to-pink-500 text-white font-extrabold px-3 py-1 rounded-full text-xs animate-bounce shadow-md">
+                    COMBO x<span id="combo-count">2</span>!
+                </div>
+            </div>
+
+            <!-- QUESTION TARGET BANNER -->
+            <div class="mt-3 text-center">
+                <div class="inline-block bg-white/90 border-2 border-pink-300 px-6 py-2.5 rounded-2xl shadow-lg animate-pulse-pink">
+                    <div class="text-xs font-bold text-pink-400 uppercase tracking-widest mb-0.5" id="unit-tag">单元分类</div>
+                    <div class="text-lg md:text-xl font-extrabold text-pink-600 flex items-center justify-center gap-2" id="target-prompt">
+                        接住【吸水能力】的物品！
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CANVAS GAME AREA -->
+        <div class="flex-1 w-full relative max-w-4xl mx-auto my-2" id="canvas-container">
+            <canvas id="gameCanvas" class="w-full h-full block rounded-3xl bg-white/40 border-2 border-white/80 shadow-inner"></canvas>
+            
+            <!-- Floating Score Effects Overlay -->
+            <div id="effect-layer" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+
+        <!-- BOTTOM CONTROLS / HINT -->
+        <div class="p-3 text-center text-xs text-pink-400 font-medium">
+            <span class="bg-white/60 px-4 py-1.5 rounded-full border border-pink-200">
+                <i class="fa-solid fa-hand-pointer mr-1"></i> 滑动 / 拖动鼠标 / 键盘 ⬅️ ➡️ 方向键 控制篮子
+            </span>
+        </div>
+    </div>
+
+    <!-- GAME OVER / VICTORY MODAL -->
+    <div id="result-modal" class="hidden absolute inset-0 bg-pink-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="pink-glass rounded-3xl p-8 max-w-md w-full text-center border-4 border-white animate-float">
+            <div id="result-icon" class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-pink-300">
+                <i class="fa-solid fa-trophy text-4xl text-amber-400"></i>
+            </div>
+            <h2 id="result-title" class="text-3xl font-extrabold text-pink-600 mb-2">太棒了！通关啦！</h2>
+            <p id="result-subtitle" class="text-pink-400 font-semibold mb-6">你掌握了全部 10 个科学知识点！</p>
+
+            <div class="bg-white/80 rounded-2xl p-4 mb-6 border border-pink-100 space-y-3">
+                <div class="flex justify-between items-center text-pink-700">
+                    <span class="font-bold">最终得分：</span>
+                    <span id="final-score" class="text-2xl font-black text-pink-600">1200</span>
+                </div>
+                <div class="flex justify-between items-center text-pink-700">
+                    <span class="font-bold">最大连击：</span>
+                    <span id="final-combo" class="text-xl font-bold text-amber-500">8 Combo</span>
+                </div>
+            </div>
+
+            <button id="restart-btn" class="pink-btn w-full py-4 rounded-2xl text-white font-extrabold text-xl tracking-wider uppercase">
+                <i class="fa-solid fa-rotate-right mr-2"></i> 再玩一次
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        // ... existing questionBank ...
+        const questionBank = [
+            // UNIT 1: 植物 (Plants) - Questions 1-2
+            {
+                unit: "植物 (Plants)",
+                targetPrompt: "接住【具有开花能力】的植物！",
+                targetType: "flowering",
+                items: [
+                    { name: "向日葵", icon: "🌻", isTarget: true },
+                    { name: "玫瑰", icon: "🌹", isTarget: true },
+                    { name: "苔藓", icon: "🌱", isTarget: false },
+                    { name: "羊齿植物", icon: "🌿", isTarget: false }
+                ]
+            },
+            {
+                unit: "植物 (Plants)",
+                targetPrompt: "接住【木本植物 (茎较硬)】！",
+                targetType: "woody",
+                items: [
+                    { name: "红树", icon: "🌳", isTarget: true },
+                    { name: "榴莲树", icon: "🌴", isTarget: true },
+                    { name: "香蕉树", icon: "🍌", isTarget: false },
+                    { name: "菠菜", icon: "🥬", isTarget: false }
+                ]
+            },
+
+            // UNIT 2: 磁铁 (Magnets) - Questions 3-4
+            {
+                unit: "磁铁 (Magnets)",
+                targetPrompt: "接住【能被磁铁吸引】的物品！",
+                targetType: "magnetic",
+                items: [
+                    { name: "铁钉", icon: "🔩", isTarget: true },
+                    { name: "回形针", icon: "📎", isTarget: true },
+                    { name: "木尺", icon: "📏", isTarget: false },
+                    { name: "橡皮擦", icon: "🧹", isTarget: false }
+                ]
+            },
+            {
+                unit: "磁铁 (Magnets)",
+                targetPrompt: "接住【磁铁相吸 (异极相对 N-S)】！",
+                targetType: "attract",
+                items: [
+                    { name: "N 极对 S 极", icon: "🧲", isTarget: true },
+                    { name: "S 极对 N 极", icon: "🧲", isTarget: true },
+                    { name: "N 极对 N 极", icon: "❌", isTarget: false },
+                    { name: "S 极对 S 极", icon: "❌", isTarget: false }
+                ]
+            },
+
+            // UNIT 3: 吸水能力 (Water Absorbency) - Questions 5-6
+            {
+                unit: "吸水能力 (Absorbency)",
+                targetPrompt: "接住【有吸水能力】的物品！",
+                targetType: "absorbent",
+                items: [
+                    { name: "棉花", icon: "☁️", isTarget: true },
+                    { name: "海绵", icon: "🧽", isTarget: true },
+                    { name: "面巾", icon: "🧣", isTarget: true },
+                    { name: "塑料雨衣", icon: "🧥", isTarget: false }
+                ]
+            },
+            {
+                unit: "吸水能力 (Absorbency)",
+                targetPrompt: "接住【下雨天能防雨】的物品！",
+                targetType: "waterproof",
+                items: [
+                    { name: "雨伞", icon: "☂️", isTarget: true },
+                    { name: "塑料雨靴", icon: "👢", isTarget: true },
+                    { name: "棉布帽子", icon: "🧢", isTarget: false },
+                    { name: "纸盒", icon: "📦", isTarget: false }
+                ]
+            },
+
+            // UNIT 4: 陆地与水域 (Land & Water) - Questions 7-8
+            {
+                unit: "陆地与水域",
+                targetPrompt: "接住属于【陆地地形】的名称！",
+                targetType: "landform",
+                items: [
+                    { name: "高山", icon: "⛰️", isTarget: true },
+                    { name: "山谷", icon: "🏞️", isTarget: true },
+                    { name: "高地", icon: "🏔️", isTarget: true },
+                    { name: "海洋", icon: "🌊", isTarget: false }
+                ]
+            },
+            {
+                unit: "陆地与水域",
+                targetPrompt: "接住属于【水域 (Water Bodies)】的名称！",
+                targetType: "waterbody",
+                items: [
+                    { name: "河流", icon: "🌊", isTarget: true },
+                    { name: "湖泊", icon: "🏞️", isTarget: true },
+                    { name: "池塘", icon: "🐸", isTarget: true },
+                    { name: "平原", icon: "🌾", isTarget: false }
+                ]
+            },
+
+            // UNIT 5: 建筑套件 (Building Kits) - Questions 9-10
+            {
+                unit: "建筑套件 (Building Kits)",
+                targetPrompt: "接住【能让模型旋转移动】的组件！",
+                targetType: "moving-component",
+                items: [
+                    { name: "轮子", icon: "🛞", isTarget: true },
+                    { name: "轮轴", icon: "🦯", isTarget: true },
+                    { name: "齿轮", icon: "⚙️", isTarget: true },
+                    { name: "正方形积木", icon: "🔳", isTarget: false }
+                ]
+            },
+            {
+                unit: "建筑套件 (Building Kits)",
+                targetPrompt: "接住【拆卸模型时需使用的工具】！",
+                targetType: "disassemble-tool",
+                items: [
+                    { name: "专用扳手", icon: "🔧", isTarget: true },
+                    { name: "组件拆卸器", icon: "🛠️", isTarget: true },
+                    { name: "剪刀", icon: "✂️", isTarget: false },
+                    { name: "胶水", icon: "🧪", isTarget: false }
+                ]
+            }
+        ];
+
+        // --- GAME STATE VARIABLES ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let isGameRunning = false;
+
+        // Canvas & Physics
+        let basket = {
+            x: 0,
+            y: 0,
+            width: 130, // 篮子宽度
+            height: 60,
+            speed: 10
+        };
+
+        let fallingItems = [];
+        let particles = [];
+        let spawnTimer = null;
+        let animFrameId = null;
+
+        // Keys pressed tracking
+        const keys = {};
+
+        // Audio Effects using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'catch') {
+                // Happy high chime
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'wrong') {
+                // Low buzz error
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'win') {
+                // Victory fan-fare
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                osc.frequency.setValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // --- INIT & SETUP ---
+        window.onload = () => {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Bind Control Events
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('restart-btn').addEventListener('click', startGame);
+
+            // Touch & Mouse Movement
+            window.addEventListener('mousemove', handlePointerMove);
+            window.addEventListener('touchmove', handlePointerMove, { passive: false });
+
+            // Keyboard Controls
+            window.addEventListener('keydown', (e) => keys[e.key] = true);
+            window.addEventListener('keyup', (e) => keys[e.key] = false);
+        };
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            // Keep Basket Grounded
+            basket.y = canvas.height - 70;
+            if (basket.x === 0) {
+                basket.x = canvas.width / 2 - basket.width / 2;
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!isGameRunning) return;
+            let clientX = e.clientX;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = clientX - rect.left;
+            basket.x = canvasX - basket.width / 2;
+
+            // Clamp basket inside bounds
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+        }
+
+        // --- GAME LOOP & STATE MANAGEMENT ---
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            fallingItems = [];
+            particles = [];
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+
+            resizeCanvas();
+            updateHUD();
+            loadQuestion(currentQuestionIndex);
+
+            isGameRunning = true;
+            if (spawnTimer) clearInterval(spawnTimer);
+            
+            spawnTimer = setInterval(spawnItemStream, 1400); 
+
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            gameLoop();
+        }
+
+        function loadQuestion(index) {
+            const q = questionBank[index];
+            document.getElementById('unit-tag').innerText = q.unit;
+            document.getElementById('target-prompt').innerHTML = `<i class="fa-solid fa-bullseye text-pink-500 mr-1"></i> ${q.targetPrompt}`;
+            document.getElementById('level-display').innerText = `${index + 1}/${questionBank.length}`;
+        }
+
+        function spawnItemStream() {
+            if (!isGameRunning) return;
+
+            const q = questionBank[currentQuestionIndex];
+            // Pick a random item from current question set
+            const itemData = q.items[Math.floor(Math.random() * q.items.length)];
+
+            // Item properties
+            const size = 58;
+            const margin = 40;
+            const randomX = Math.random() * (canvas.width - size - margin * 2) + margin;
+
+            // 放慢下落速度 (从 4.5~6.7 降低至 2.0~3.2，游玩体验更舒服)
+            const baseSpeed = 2.0 + Math.random() * 1.2; 
+
+            fallingItems.push({
+                x: randomX,
+                y: -size,
+                width: size,
+                height: size,
+                name: itemData.name,
+                icon: itemData.icon,
+                isTarget: itemData.isTarget,
+                speed: baseSpeed,
+                rotation: (Math.random() - 0.5) * 0.2
+            });
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').innerText = score;
+
+            // Combo badge
+            const comboBadge = document.getElementById('combo-badge');
+            if (combo >= 2) {
+                comboBadge.classList.remove('hidden');
+                document.getElementById('combo-count').innerText = combo;
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+        }
+
+        // --- MAIN ANIMATION ENGINE ---
+        function gameLoop() {
+            if (!isGameRunning) return;
+
+            // Clear Screen
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update Basket via Keyboard
+            if (keys['ArrowLeft'] || keys['a']) {
+                basket.x -= basket.speed;
+                if (basket.x < 0) basket.x = 0;
+            }
+            if (keys['ArrowRight'] || keys['d']) {
+                basket.x += basket.speed;
+                if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+            }
+
+            // Render Basket (Cute Pink Laboratory Basket)
+            drawBasket();
+
+            // Update & Render Falling Items
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                let item = fallingItems[i];
+                item.y += item.speed;
+
+                // Draw Item Card
+                drawItem(item);
+
+                // Check Catch Collision
+                if (checkCollision(item, basket)) {
+                    handleCatch(item, i);
+                    continue;
+                }
+
+                // Check Miss / Offscreen Bottom
+                if (item.y > canvas.height) {
+                    fallingItems.splice(i, 1);
+                    // No penalty for missed distractor items, but if target missed break combo
+                    if (item.isTarget) {
+                        combo = 0;
+                        updateHUD();
+                    }
+                }
+            }
+
+            // Update & Render Particles Effects
+            updateParticles();
+
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function drawBasket() {
+            // Shadow
+            ctx.fillStyle = "rgba(255, 182, 193, 0.4)";
+            ctx.beginPath();
+            ctx.ellipse(basket.x + basket.width / 2, basket.y + basket.height - 5, basket.width / 2, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Basket Body Gradient (Pink/Rose Theme)
+            let grad = ctx.createLinearGradient(basket.x, basket.y, basket.x, basket.y + basket.height);
+            grad.addColorStop(0, '#ff9ebb');
+            grad.addColorStop(1, '#ff5388');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.width, basket.height, [16, 16, 24, 24]);
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Basket Rim Highlight
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.roundRect(basket.x - 4, basket.y - 4, basket.width + 8, 14, 8);
+            ctx.fill();
+
+            // Cute Lab Flask Icon on Basket Center
+            ctx.font = "22px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🧪", basket.x + basket.width / 2, basket.y + basket.height / 2 + 4);
+        }
+
+        function drawItem(item) {
+            ctx.save();
+            ctx.translate(item.x + item.width / 2, item.y + item.height / 2);
+
+            // White Pink Glass Bubble Card
+            ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+            ctx.shadowColor = "rgba(255, 105, 180, 0.2)";
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.roundRect(-item.width / 2, -item.height / 2, item.width, item.height, 16);
+            ctx.fill();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#ffb6c1";
+            ctx.stroke();
+
+            // Emoji Icon
+            ctx.font = "26px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(item.icon, 0, -8);
+
+            // Name Label Below
+            ctx.font = "bold 11px Fredoka, sans-serif";
+            ctx.fillStyle = "#d84370";
+            ctx.fillText(item.name, 0, 16);
+
+            ctx.restore();
+        }
+
+        function checkCollision(item, basket) {
+            return (
+                item.x < basket.x + basket.width &&
+                item.x + item.width > basket.x &&
+                item.y + item.height > basket.y &&
+                item.y < basket.y + basket.height
+            );
+        }
+
+        function handleCatch(item, index) {
+            fallingItems.splice(index, 1);
+
+            if (item.isTarget) {
+                // SUCCESS TARGET CATCH
+                playSound('catch');
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+
+                const points = 100 + (combo > 1 ? combo * 20 : 0);
+                score += points;
+
+                // Spawn Sparkle Particles
+                createParticles(basket.x + basket.width / 2, basket.y, '#ff4081', 15);
+                showFloatingText(`+${points}`, basket.x + basket.width / 2, basket.y - 20, '#ff2e63');
+
+                // Check Question Advancement
+                let currentCorrects = questionBank[currentQuestionIndex].correctCatches || 0;
+                currentCorrects++;
+                questionBank[currentQuestionIndex].correctCatches = currentCorrects;
+
+                if (currentCorrects >= 2) {
+                    nextQuestion();
+                }
+
+            } else {
+                // WRONG ITEM CATCH (No Life Penalty - Just reset combo and show hint)
+                playSound('wrong');
+                combo = 0;
+
+                createParticles(basket.x + basket.width / 2, basket.y, '#9e9e9e', 12);
+                showFloatingText(`再试一次哦!`, basket.x + basket.width / 2, basket.y - 20, '#e91e63');
+            }
+
+            updateHUD();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= questionBank.length) {
+                endGame(true);
+            } else {
+                loadQuestion(currentQuestionIndex);
+                // Particle celebration for moving up
+                createParticles(canvas.width / 2, 100, '#ff80ab', 25);
+            }
+        }
+
+        // --- PARTICLES & FLOATING SCORE EFFECTS ---
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.8) * 6,
+                    radius: Math.random() * 5 + 2,
+                    color: color,
+                    alpha: 1,
+                    life: 0.03
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.life;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function showFloatingText(text, x, y, color) {
+            const effectLayer = document.getElementById('effect-layer');
+            const elem = document.createElement('div');
+            elem.className = "absolute font-black text-lg animate-bounce pointer-events-none transition-all duration-500";
+            elem.style.left = `${x}px`;
+            elem.style.top = `${y}px`;
+            elem.style.color = color;
+            elem.innerText = text;
+
+            effectLayer.appendChild(elem);
+
+            setTimeout(() => {
+                elem.style.transform = 'translateY(-30px)';
+                elem.style.opacity = '0';
+            }, 50);
+
+            setTimeout(() => {
+                elem.remove();
+            }, 600);
+        }
+
+        // --- END GAME & VICTORY ---
+        function endGame(isWin) {
+            isGameRunning = false;
+            clearInterval(spawnTimer);
+
+            const modal = document.getElementById('result-modal');
+            const title = document.getElementById('result-title');
+            const subtitle = document.getElementById('result-subtitle');
+            const icon = document.getElementById('result-icon');
+
+            modal.classList.remove('hidden');
+
+            playSound('win');
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            title.innerText = "🎉 太棒了！顺利通关！";
+            subtitle.innerText = "你真棒！掌握了全部 10 道科学精选知识点！";
+            icon.innerHTML = `<i class="fa-solid fa-crown text-4xl text-amber-400"></i>`;
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-combo').innerText = `${maxCombo} Combo`;
+        }
+    </script>
+</body>
+</html>
